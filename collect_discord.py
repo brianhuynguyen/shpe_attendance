@@ -31,8 +31,8 @@ async def on_ready():
         days_until_sunday = 7
 
     next_sunday = today + timedelta(days=days_until_sunday)
-    # How far you go back (should change to automatic)
-    number_of_weeks = 208
+    # How far you go back
+    number_of_weeks = 1
     one_week = timedelta(days=7)
 
     weekly_message_counts = {}
