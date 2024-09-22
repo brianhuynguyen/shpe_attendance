@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 f = open('GBM Attendance - Meeting data.csv', 'r')
@@ -25,8 +25,9 @@ for i, line in enumerate(f):
         data['Season Encoded'].append(line[7])
         data['Discord Messages'].append(line[8])
         data['First GBM'].append(line[9])
-        data['Last Meeting Attendance'].append(line[10].strip())
-
+        data['Last Meeting Attendance'].append(line[10])
+        data['Room Capacity'].append(line[11])
+        data['Post Convention'].append(line[12].strip())
 
 df = pd.DataFrame(data)
 
@@ -40,21 +41,49 @@ df['Season Encoded'] = pd.to_numeric(df['Season Encoded'])
 df['Discord Messages'] = pd.to_numeric(df['Discord Messages'])
 df['First GBM'] = pd.to_numeric(df['First GBM'])
 df['Last Meeting Attendance'] = pd.to_numeric(df['Last Meeting Attendance'])
+df['Room Capacity'] = pd.to_numeric(df['Room Capacity'])
+df['Post Convention'] = pd.to_numeric(df['Post Convention'])
 
-X = df[['Month', 'Day', 'Year', 'Week of the Semester', 'Season Encoded', 'Discord Messages', 'First GBM', 'Last Meeting Attendance']]
+X = df[['Month', 'Day', 'Year', 'Week of the Semester', 'Season Encoded', 'Discord Messages', 'First GBM', 'Last Meeting Attendance', 'Room Capacity','Post Convention']]
 y = df['Attendance']  # Target
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# # Ridge Pregression
+# Model 1: Ridge Regression
 ridge_model = Ridge(random_state=42)
 ridge_model.fit(X_train, y_train)
 y_pred_ridge = ridge_model.predict(X_test)
+print("Ridge Regression:")
+print("MAE:", mean_absolute_error(y_test, y_pred_ridge))
+print("MSE:", mean_squared_error(y_test, y_pred_ridge))
+print("R² Score:", str("{:.2%}".format(r2_score(y_test, y_pred_ridge))))
 
-# print('Ridge Regression:')
-# print('MAE: ' + str(mean_absolute_error(y_test, y_pred_ridge)))
-# print('MSE: ' + str(mean_squared_error(y_test, y_pred_ridge)))
-# print('R² Score: ' + str("{:.2%}".format(r2_score(y_test, y_pred_ridge))))
+# # Model 2: Random Forest Regressor
+# rf_model = RandomForestRegressor(random_state=42)
+# rf_model.fit(X_train, y_train)
+# y_pred_rf = rf_model.predict(X_test)
+# print("\nRandom Forest Regressor:")
+# print("MAE:", mean_absolute_error(y_test, y_pred_rf))
+# print("MSE:", mean_squared_error(y_test, y_pred_rf))
+# print("R² Score:", r2_score(y_test, y_pred_rf))
+
+# # Model 3: Lasso Regression
+# lasso_model = Lasso(random_state=42)
+# lasso_model.fit(X_train, y_train)
+# y_pred_lasso = lasso_model.predict(X_test)
+# print("\nLasso Regression:")
+# print("MAE:", mean_absolute_error(y_test, y_pred_lasso))
+# print("MSE:", mean_squared_error(y_test, y_pred_lasso))
+# print("R² Score:", r2_score(y_test, y_pred_lasso))
+
+# # Model 4: Linear Regression
+# linear_model = LinearRegression()
+# linear_model.fit(X_train, y_train)
+# y_pred_linear = linear_model.predict(X_test)
+# print("\nLinear Regression:")
+# print("MAE:", mean_absolute_error(y_test, y_pred_linear))
+# print("MSE:", mean_squared_error(y_test, y_pred_linear))
+# print("R² Score:", r2_score(y_test, y_pred_linear))
 
 # Prediction
 today = datetime.now()
@@ -82,7 +111,9 @@ upcoming_gbm = {
     'Season Encoded': season_encoded,       
     'Discord Messages': 7,    # Fill this out
     'First GBM': first_gbm,            
-    'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1] 
+    'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1],
+    'Room Capacity': 80,
+    'Post Convention': 0
 }
 
 upcoming_gbm_df = pd.DataFrame([upcoming_gbm])
