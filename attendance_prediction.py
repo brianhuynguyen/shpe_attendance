@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 f = open('GBM Attendance - Meeting data.csv', 'r')
@@ -44,14 +45,17 @@ df['Last Meeting Attendance'] = pd.to_numeric(df['Last Meeting Attendance'])
 df['Room Capacity'] = pd.to_numeric(df['Room Capacity'])
 df['Post Convention'] = pd.to_numeric(df['Post Convention'])
 
+df['Weight'] = df['Year'].apply(lambda x: 6 if x == 2024 else (5 if x == 2023 else (4 if x == 2022 else 0.5)))
+
 X = df[['Month', 'Day', 'Year', 'Week of the Semester', 'Season Encoded', 'Discord Messages', 'First GBM', 'Last Meeting Attendance', 'Room Capacity','Post Convention']]
 y = df['Attendance']  # Target
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, weights_train, weights_test = train_test_split(
+    X, y, df['Weight'], test_size=0.2, random_state=42)
 
 # Model 1: Ridge Regression
 ridge_model = Ridge(random_state=42)
-ridge_model.fit(X_train, y_train)
+ridge_model.fit(X_train, y_train, sample_weight=weights_train)
 y_pred_ridge = ridge_model.predict(X_test)
 print("Ridge Regression:")
 print("MAE:", mean_absolute_error(y_test, y_pred_ridge))
@@ -89,10 +93,8 @@ print("R² Score:", str("{:.2%}".format(r2_score(y_test, y_pred_ridge))))
 today = datetime.now()
 days_until_monday = (7 - today.weekday()) % 7
 
-if days_until_monday == 0:
-    days_until_monday = 7
-
 next_gbm = today + timedelta(days=days_until_monday)
+
 if next_gbm.month>7:
     season_encoded = 0
 else:
@@ -109,7 +111,7 @@ upcoming_gbm = {
     'Year': next_gbm.year,              
     'Week of the Semester': 5, 
     'Season Encoded': season_encoded,       
-    'Discord Messages': 7,    # Fill this out
+    'Discord Messages': 29,    # Fill this out
     'First GBM': first_gbm,            
     'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1],
     'Room Capacity': 80,
@@ -120,5 +122,5 @@ upcoming_gbm_df = pd.DataFrame([upcoming_gbm])
 
 predicted_attendance = ridge_model.predict(upcoming_gbm_df)
 
-print(f'Predicted Attendance for Upcoming GBM: {round(predicted_attendance[0])}')
+print(f'Predicted Attendance for Upcoming GBM on {next_gbm.date()}: {round(predicted_attendance[0])}')
 
