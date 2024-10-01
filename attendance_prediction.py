@@ -46,7 +46,7 @@ df['Last Meeting Attendance'] = pd.to_numeric(df['Last Meeting Attendance'])
 df['Room Capacity'] = pd.to_numeric(df['Room Capacity'])
 df['Post Convention'] = pd.to_numeric(df['Post Convention'])
 
-df['Weight'] = df['Year'].apply(lambda x: 5 if x == 2024 else (3 if x == 2023 else (2 if x == 2022 else 1)))
+df['Weight'] = df['Year'].apply(lambda x: 3 if x == 2024 else (3 if x == 2023 else (2 if x == 2022 else 1)))
 
 X = df[['Month', 
         'Day',
@@ -101,7 +101,7 @@ upcoming_gbm = {
     'Month': next_gbm.month,               
     'Day': next_gbm.day,                 
     'Year': next_gbm.year,              
-    'Week of the Semester': 6, 
+    'Week of the Semester': 7, 
     'Season Encoded': season_encoded,
     'First GBM': first_gbm,            
     'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1],
