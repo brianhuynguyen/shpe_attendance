@@ -101,7 +101,7 @@ upcoming_gbm = {
     'Month': next_gbm.month,               
     'Day': next_gbm.day,                 
     'Year': next_gbm.year,              
-    'Week of the Semester': 7, 
+    'Week of the Semester': 8, 
     'Season Encoded': season_encoded,
     'First GBM': first_gbm,            
     'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1],
