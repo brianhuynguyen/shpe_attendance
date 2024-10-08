@@ -51,10 +51,10 @@ ridge_model = Ridge(random_state=42)
 ridge_model.fit(X_train, y_train)
 y_pred_ridge = ridge_model.predict(X_test)
 
-# print('Ridge Regression:')
-# print('MAE: ' + str(mean_absolute_error(y_test, y_pred_ridge)))
-# print('MSE: ' + str(mean_squared_error(y_test, y_pred_ridge)))
-# print('R² Score: ' + str("{:.2%}".format(r2_score(y_test, y_pred_ridge))))
+print('Ridge Regression:')
+print('MAE: ' + str(mean_absolute_error(y_test, y_pred_ridge)))
+print('MSE: ' + str(mean_squared_error(y_test, y_pred_ridge)))
+print('R² Score: ' + str("{:.2%}".format(r2_score(y_test, y_pred_ridge))))
 
 # Prediction
 today = datetime.now()
