@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import Ridge
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
+from sklearn.metrics import make_scorer, mean_absolute_error, mean_squared_error, r2_score
 
 f = open('GBM Attendance - Meeting data.csv', 'r')
 
@@ -25,8 +27,9 @@ for i, line in enumerate(f):
         data['Season Encoded'].append(line[7])
         data['Discord Messages'].append(line[8])
         data['First GBM'].append(line[9])
-        data['Last Meeting Attendance'].append(line[10].strip())
-
+        data['Last Meeting Attendance'].append(line[10])
+        data['Room Capacity'].append(line[11])
+        data['Post Convention'].append(line[12].strip())
 
 df = pd.DataFrame(data)
 
@@ -40,35 +43,55 @@ df['Season Encoded'] = pd.to_numeric(df['Season Encoded'])
 df['Discord Messages'] = pd.to_numeric(df['Discord Messages'])
 df['First GBM'] = pd.to_numeric(df['First GBM'])
 df['Last Meeting Attendance'] = pd.to_numeric(df['Last Meeting Attendance'])
+df['Room Capacity'] = pd.to_numeric(df['Room Capacity'])
+df['Post Convention'] = pd.to_numeric(df['Post Convention'])
 
-X = df[['Month', 'Day', 'Year', 'Week of the Semester', 'Season Encoded', 'Discord Messages', 'First GBM', 'Last Meeting Attendance']]
-y = df['Attendance']  # Target
+df['Weight'] = df['Year'].apply(lambda x: 3 if x == 2024 else (3 if x == 2023 else (2 if x == 2022 else 1)))
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X = df[['Month', 
+        'Day',
+        'Year',
+        'Week of the Semester',
+        'Season Encoded',
+        'First GBM',
+        'Last Meeting Attendance',
+        ]]
 
-# # Ridge Pregression
-ridge_model = Ridge(random_state=42)
-ridge_model.fit(X_train, y_train)
-y_pred_ridge = ridge_model.predict(X_test)
+y = df['Attendance']
+weights = df['Weight']
 
-print('Ridge Regression:')
-print('MAE: ' + str(mean_absolute_error(y_test, y_pred_ridge)))
-print('MSE: ' + str(mean_squared_error(y_test, y_pred_ridge)))
-print('R² Score: ' + str("{:.2%}".format(r2_score(y_test, y_pred_ridge))))
+X_train, X_test, y_train, y_test, weights_train, weights_test = train_test_split(
+    X, y, df['Weight'], test_size=0.2, random_state=42)
+
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+r2_scores, mae_scores, mse_scores = [], [], []
+
+for train_index, test_index in kf.split(X):
+    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+    weights_train = weights.iloc[train_index]
+    
+    ridge_model = Ridge()
+    ridge_model.fit(X_train, y_train, sample_weight=weights_train)
+    
+    y_pred = ridge_model.predict(X_test)
+    r2_scores.append(r2_score(y_test, y_pred))
+    mae_scores.append(mean_absolute_error(y_test, y_pred))
+    mse_scores.append(mean_squared_error(y_test, y_pred))
+
+# Display cross-validation results
+print(f"Mean R² score: {np.mean(r2_scores):.2%}")
+print(f"Mean MAE: {np.mean(mae_scores)}")
+print(f"Mean MSE: {np.mean(mse_scores)}")
+
 
 # Prediction
-today = datetime.now()
-days_until_monday = (7 - today.weekday()) % 7
-
-if days_until_monday == 0:
-    days_until_monday = 7
-
-next_gbm = today + timedelta(days=days_until_monday)
+prev_gbm = df['Meeting'].iloc[-1]
+next_gbm = prev_gbm + timedelta(days=7)
 if next_gbm.month>7:
     season_encoded = 0
 else:
     season_encoded = 1
-
 if next_gbm.month == 9 and next_gbm.day <= 16:
     first_gbm = 1
 else:
@@ -78,16 +101,13 @@ upcoming_gbm = {
     'Month': next_gbm.month,               
     'Day': next_gbm.day,                 
     'Year': next_gbm.year,              
-    'Week of the Semester': 5, 
-    'Season Encoded': season_encoded,       
-    'Discord Messages': 7,    # Fill this out
+    'Week of the Semester': 7, 
+    'Season Encoded': season_encoded,
     'First GBM': first_gbm,            
-    'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1] 
+    'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1],
 }
 
 upcoming_gbm_df = pd.DataFrame([upcoming_gbm])
-
 predicted_attendance = ridge_model.predict(upcoming_gbm_df)
-
-print(f'Predicted Attendance for Upcoming GBM: {round(predicted_attendance[0])}')
+print(f'Predicted Attendance for Upcoming GBM on {next_gbm.date()}: {round(predicted_attendance[0])}')
 
