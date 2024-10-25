@@ -84,7 +84,6 @@ print(f"Mean R² score: {np.mean(r2_scores):.2%}")
 print(f"Mean MAE: {np.mean(mae_scores)}")
 print(f"Mean MSE: {np.mean(mse_scores)}")
 
-
 # Prediction
 prev_gbm = df['Meeting'].iloc[-1]
 next_gbm = prev_gbm + timedelta(days=7)
@@ -97,11 +96,14 @@ if next_gbm.month == 9 and next_gbm.day <= 16:
 else:
     first_gbm = 0
 
+difference = datetime(next_gbm.year,next_gbm.month,next_gbm.day) - datetime(2024,8,22)
+weeks = int(difference.days/7+1)
+
 upcoming_gbm = {
     'Month': next_gbm.month,               
     'Day': next_gbm.day,                 
     'Year': next_gbm.year,              
-    'Week of the Semester': 9, 
+    'Week of the Semester': weeks, 
     'Season Encoded': season_encoded,
     'First GBM': first_gbm,            
     'Last Meeting Attendance': data['Attendance'][len(data['Attendance'])-1],
