@@ -97,7 +97,7 @@ else:
     first_gbm = 0
 
 difference = datetime(next_gbm.year,next_gbm.month,next_gbm.day) - datetime(2024,8,22)
-weeks = int(difference.days/7+1)
+weeks = int((difference.days/7)+1)
 
 upcoming_gbm = {
     'Month': next_gbm.month,               
