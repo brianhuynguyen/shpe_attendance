@@ -110,6 +110,6 @@ upcoming_gbm = {
 }
 
 upcoming_gbm_df = pd.DataFrame([upcoming_gbm])
-predicted_attendance = ridge_model.predict(upcoming_gbm_df)
+predicted_attendance = ridge_model.predict(upcoming_gbm_df) # type: ignore
 print(f'Predicted Attendance for Upcoming GBM on {next_gbm.date()}: {round(predicted_attendance[0])}')
 
