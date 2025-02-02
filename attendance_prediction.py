@@ -61,9 +61,9 @@ y = df['Attendance']
 weights = df['Weight']
 
 X_train, X_test, y_train, y_test, weights_train, weights_test = train_test_split(
-    X, y, df['Weight'], test_size=0.2, random_state=42)
+    X, y, df['Weight'], test_size=0.2, random_state=0)
 
-kf = KFold(n_splits=5, shuffle=True, random_state=42)
+kf = KFold(n_splits=5, shuffle=True, random_state=0)
 r2_scores, mae_scores, mse_scores = [], [], []
 
 for train_index, test_index in kf.split(X):
@@ -96,7 +96,7 @@ if next_gbm.month == 9 and next_gbm.day <= 16:
 else:
     first_gbm = 0
 
-difference = datetime(next_gbm.year,next_gbm.month,next_gbm.day) - datetime(2024,8,22)
+difference = datetime(next_gbm.year,next_gbm.month,next_gbm.day) - datetime(2025,1,15)
 weeks = int((difference.days/7)+1)
 
 upcoming_gbm = {
